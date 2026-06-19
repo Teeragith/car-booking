@@ -2468,13 +2468,16 @@ async function renderSettings() {
     <div class="card" style="margin-bottom:16px">
       <div class="card-header"><div class="card-title">👥 Telegram Chat ID ของผู้ใช้</div></div>
       <div class="table-wrap"><table>
-        <thead><tr><th>ชื่อ</th><th>บทบาท</th><th>Telegram Chat ID</th></tr></thead>
+        <thead><tr><th>ชื่อ</th><th>บทบาท</th><th>Telegram Chat ID</th><th>ทดสอบ</th></tr></thead>
         <tbody>${users.map(u=>`<tr>
           <td>${u.name}</td>
           <td>${{admin:'👑 Admin',driver:'🚘 คนขับ',booker:'👤 ผู้จอง'}[u.role]||u.role}</td>
           <td>${u.telegramChatId
-            ? '<span style="color:#0088cc;font-weight:700">✅ ตั้งค่าแล้ว</span>'
+            ? '<span style="color:#0088cc;font-weight:700">✅ '+u.telegramChatId+'</span>'
             : '<span style="color:#aaa">— ยังไม่ได้ตั้งค่า</span>'}</td>
+          <td>${u.telegramChatId
+            ? `<button class="btn btn-outline btn-sm" style="border-color:#0088cc;color:#0088cc;padding:4px 10px;font-size:12px" onclick="testUserTgFromSettings('${u.telegramChatId}','${u.name}',this)">🔔 ทดสอบ</button>`
+            : '<span style="color:#ccc;font-size:12px">—</span>'}</td>
         </tr>`).join('')}</tbody>
       </table></div>
       <div style="padding:12px 16px;font-size:12px;color:#888">แก้ไข Chat ID ของแต่ละคนได้ที่ หน้า <strong>จัดการผู้ใช้</strong></div>
@@ -2492,6 +2495,28 @@ function toggleSetting(key, wrap) {
   track.classList.toggle('on', !isOn);
   if (lbl) lbl.textContent = !isOn ? 'เปิด' : 'ปิด';
   wrap.dataset.on = String(!isOn);
+}
+
+async function testUserTgFromSettings(chatId, name, btn) {
+  const botToken = document.getElementById('cfgBotToken')?.value.trim() || '';
+  if (!botToken) { toast('⚠️ กรุณาใส่ Bot Token ในช่องด้านบนก่อน'); return; }
+  const orig = btn.textContent;
+  btn.textContent = '⏳';
+  btn.disabled = true;
+  const res = await apiCall('testTelegramBot', { botToken, chatId });
+  btn.disabled = false;
+  if (res.success) {
+    btn.textContent = '✅';
+    btn.style.borderColor = '#34a853';
+    btn.style.color = '#34a853';
+    setTimeout(() => { btn.textContent = orig; btn.style.borderColor = '#0088cc'; btn.style.color = '#0088cc'; }, 3000);
+  } else {
+    btn.textContent = '❌';
+    btn.style.borderColor = '#ea4335';
+    btn.style.color = '#ea4335';
+    setTimeout(() => { btn.textContent = orig; btn.style.borderColor = '#0088cc'; btn.style.color = '#0088cc'; }, 3000);
+    toast('❌ ' + name + ': ' + (res.error || 'ส่งไม่สำเร็จ'));
+  }
 }
 
 async function testAdminTelegram() {
@@ -3333,25 +3358,31 @@ async function openAssignDriver(id) {
     </div>
 
 
-    ${(b.selfDrive===true||String(b.selfDrive).toLowerCase()==='true') ? `
-    <div class="form-group">
-      <label>คนขับ</label>
-      <input class="form-control" value="🚗 ${b.bookerName} (ขับเอง)" disabled style="background:#fff3e0;color:#e65100;font-weight:700;cursor:not-allowed">
-      <input type="hidden" id="assignDriverSel" value="SELF">
-    </div>` : (!hasDrivers ? `<div class="alert alert-warning">⚠️ ยังไม่มีคนขับในระบบ กรุณาไปที่หน้า <strong>👥 จัดการผู้ใช้</strong> แล้วเพิ่มผู้ใช้ role <strong>คนขับรถ</strong> ก่อน</div>` : `
-    <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
-      <span style="background:#d1e7dd;color:#0a5c36;padding:5px 12px;border-radius:20px;font-size:13px;font-weight:700">✅ ว่าง ${freeDrivers.length} คน</span>
-      ${busyDrivers.length>0?`<span style="background:#f8d7da;color:#842029;padding:5px 12px;border-radius:20px;font-size:13px;font-weight:700">🔴 ติดงาน ${busyDrivers.length} คน</span>`:''}
+    <!-- selfDrive checkbox (admin can toggle) -->
+    <div style="padding:10px 14px;background:#f8f9fa;border-radius:10px;margin-bottom:14px;display:flex;align-items:center;gap:10px">
+      <input type="checkbox" id="assignSelfDrive" ${(b.selfDrive===true||String(b.selfDrive).toLowerCase()==='true')?'checked':''} onchange="toggleAssignSelfDrive('${b.bookerName}')" style="width:18px;height:18px;cursor:pointer">
+      <label for="assignSelfDrive" style="font-weight:700;font-size:14px;cursor:pointer;margin:0">🚗 ผู้จองขับรถเอง</label>
     </div>
-    <div class="form-group">
-      <label>เลือกคนขับที่ว่าง <span style="color:red">*</span></label>
-      <select id="assignDriverSel" class="form-control" ${freeDrivers.length===0?'disabled':''}>
-        <option value="">-- เลือกคนขับ --</option>
-        ${optionsFree}
-        ${optionsBusy ? `<optgroup label="──── ติดงานช่วงเวลานี้ (เลือกไม่ได้) ────">${optionsBusy}</optgroup>` : ''}
-      </select>
-      ${freeDrivers.length===0&&hasDrivers ? `<div style="margin-top:8px;font-size:13px;color:var(--danger)">⚠️ คนขับทุกคนมีงานในช่วงเวลานี้แล้ว</div>` : ''}
-    </div>`)}
+
+    <div id="assignDriverSection">
+      ${(b.selfDrive===true||String(b.selfDrive).toLowerCase()==='true') ? `
+      <div class="form-group">
+        <input class="form-control" id="assignDriverSel" value="${b.bookerName}" disabled style="background:#fff3e0;color:#e65100;font-weight:700;cursor:not-allowed">
+      </div>` : (!hasDrivers ? `<div class="alert alert-warning">⚠️ ยังไม่มีคนขับในระบบ</div>` : `
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+        <span style="background:#d1e7dd;color:#0a5c36;padding:5px 12px;border-radius:20px;font-size:13px;font-weight:700">✅ ว่าง ${freeDrivers.length} คน</span>
+        ${busyDrivers.length>0?`<span style="background:#f8d7da;color:#842029;padding:5px 12px;border-radius:20px;font-size:13px;font-weight:700">🔴 ติดงาน ${busyDrivers.length} คน</span>`:''}
+      </div>
+      <div class="form-group">
+        <label>เลือกคนขับที่ว่าง <span style="color:red">*</span></label>
+        <select id="assignDriverSel" class="form-control" ${freeDrivers.length===0?'disabled':''}>
+          <option value="">-- เลือกคนขับ --</option>
+          ${optionsFree}
+          ${optionsBusy ? `<optgroup label="──── ติดงานช่วงเวลานี้ (เลือกไม่ได้) ────">${optionsBusy}</optgroup>` : ''}
+        </select>
+        ${freeDrivers.length===0&&hasDrivers ? `<div style="margin-top:8px;font-size:13px;color:var(--danger)">⚠️ คนขับทุกคนมีงานในช่วงเวลานี้แล้ว</div>` : ''}
+      </div>`)}
+    </div>
 
     <div class="form-group">
       <label>เลขไมล์เริ่มต้น (ไม่บังคับ)</label>
@@ -3384,13 +3415,32 @@ function checkAssignVehicleConflict(bookingId) {
   }
 }
 
+function toggleAssignSelfDrive(bookerName) {
+  const cb = document.getElementById('assignSelfDrive');
+  const section = document.getElementById('assignDriverSection');
+  if (!section) return;
+  if (cb.checked) {
+    section.innerHTML = `<div class="form-group">
+      <input class="form-control" id="assignDriverSel" value="${bookerName}" disabled style="background:#fff3e0;color:#e65100;font-weight:700;cursor:not-allowed">
+    </div>`;
+  } else {
+    section.innerHTML = `<div class="form-group">
+      <label>เลือกคนขับ <span style="color:red">*</span></label>
+      <select id="assignDriverSel" class="form-control">
+        <option value="">-- เลือกคนขับ --</option>
+        ${Object.entries(drivers).map(([id,name])=>`<option value="${id}">${name}</option>`).join('')}
+      </select>
+    </div>`;
+  }
+}
+
 async function confirmAssign(id) {
   const vehicleId=document.getElementById('assignVehicleSel').value;
   const driverSel=document.getElementById('assignDriverSel');
   const driverId=driverSel?driverSel.value:'';
   const mile=document.getElementById('assignMile').value;
   const b=bookings.find(x=>String(x.id)===String(id));
-  const isSelfDrive=b&&(b.selfDrive===true||String(b.selfDrive).toLowerCase()==='true');
+  const isSelfDrive=document.getElementById('assignSelfDrive')?.checked ?? (b&&(b.selfDrive===true||String(b.selfDrive).toLowerCase()==='true'));
   if(!vehicleId){alert('กรุณาเลือกรถ');return;}
   if(!isSelfDrive&&!driverId){alert('กรุณาเลือกคนขับ');return;}
   const v=vehicles.find(x=>x.id===vehicleId);
