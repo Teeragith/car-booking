@@ -3332,14 +3332,17 @@ async function openAssignDriver(id) {
       <div id="assignVehicleMsg" style="margin-top:6px;font-size:13px"></div>
     </div>
 
-    ${(b.selfDrive===true||String(b.selfDrive).toLowerCase()==='true') ? `<div class="alert" style="background:#fff3e0;border-color:#ffb74d;color:#e65100">🚗 การจองนี้ผู้จองขับเอง — ไม่จำเป็นต้องกำหนดคนขับ</div>` : (!hasDrivers ? `<div class="alert alert-warning">⚠️ ยังไม่มีคนขับในระบบ กรุณาไปที่หน้า <strong>👥 จัดการผู้ใช้</strong> แล้วเพิ่มผู้ใช้ role <strong>คนขับรถ</strong> ก่อน</div>` : '')}
 
-    ${hasDrivers && !(b.selfDrive===true||String(b.selfDrive).toLowerCase()==='true') ? `
+    ${(b.selfDrive===true||String(b.selfDrive).toLowerCase()==='true') ? `
+    <div class="form-group">
+      <label>คนขับ</label>
+      <input class="form-control" value="🚗 ${b.bookerName} (ขับเอง)" disabled style="background:#fff3e0;color:#e65100;font-weight:700;cursor:not-allowed">
+      <input type="hidden" id="assignDriverSel" value="SELF">
+    </div>` : (!hasDrivers ? `<div class="alert alert-warning">⚠️ ยังไม่มีคนขับในระบบ กรุณาไปที่หน้า <strong>👥 จัดการผู้ใช้</strong> แล้วเพิ่มผู้ใช้ role <strong>คนขับรถ</strong> ก่อน</div>` : `
     <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
       <span style="background:#d1e7dd;color:#0a5c36;padding:5px 12px;border-radius:20px;font-size:13px;font-weight:700">✅ ว่าง ${freeDrivers.length} คน</span>
       ${busyDrivers.length>0?`<span style="background:#f8d7da;color:#842029;padding:5px 12px;border-radius:20px;font-size:13px;font-weight:700">🔴 ติดงาน ${busyDrivers.length} คน</span>`:''}
     </div>
-
     <div class="form-group">
       <label>เลือกคนขับที่ว่าง <span style="color:red">*</span></label>
       <select id="assignDriverSel" class="form-control" ${freeDrivers.length===0?'disabled':''}>
@@ -3348,7 +3351,7 @@ async function openAssignDriver(id) {
         ${optionsBusy ? `<optgroup label="──── ติดงานช่วงเวลานี้ (เลือกไม่ได้) ────">${optionsBusy}</optgroup>` : ''}
       </select>
       ${freeDrivers.length===0&&hasDrivers ? `<div style="margin-top:8px;font-size:13px;color:var(--danger)">⚠️ คนขับทุกคนมีงานในช่วงเวลานี้แล้ว</div>` : ''}
-    </div>` : ''}
+    </div>`)}
 
     <div class="form-group">
       <label>เลขไมล์เริ่มต้น (ไม่บังคับ)</label>
