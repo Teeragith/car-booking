@@ -1592,13 +1592,13 @@ function renderAdminDashboard() {
               <span>🕐 ${b.timeSlot}</span>
               <span>📍 ${b.destination}</span>
               ${isOverdue(b)?'<span class="badge-overdue">🔴 เลยกำหนด</span>':''}
-              ${(b.selfDrive===true||b.selfDrive==='true')?'<span style="background:#fff3e0;color:#e65100;border-radius:12px;padding:2px 8px;font-weight:700;font-size:12px">🚗 ขับเอง</span>':''}
+              ${(b.selfDrive===true||String(b.selfDrive).toLowerCase()==='true')?'<span style="background:#fff3e0;color:#e65100;border-radius:12px;padding:2px 8px;font-weight:700;font-size:12px">🚗 ขับเอง</span>':''}
             </div></div>
             ${statusBadge(b.status)}
           </div>
           <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
             <button class="btn ${isOverdue(b)?'btn-danger':'btn-success'} btn-sm" onclick="openAssignDriver('${b.id}')">
-              ${(b.selfDrive===true||b.selfDrive==='true')?'🚘 กำหนดรถ (ขับเอง)':'🚘 กำหนดรถ/คนขับ'}
+              ${(b.selfDrive===true||String(b.selfDrive).toLowerCase()==='true')?'🚘 กำหนดรถ (ขับเอง)':'🚘 กำหนดรถ/คนขับ'}
             </button>
             <button class="btn btn-outline btn-sm" onclick="viewBooking('${b.id}')">👁 รายละเอียด</button>
           </div>
@@ -3320,7 +3320,7 @@ async function openAssignDriver(id) {
     <div class="alert alert-info" style="font-size:13px">
       👤 ${b.bookerName} &nbsp;|&nbsp; 📅 ${formatDate(b.useDate)} &nbsp;|&nbsp; 🕐 ${b.timeSlot}
       ${b.passengers?`&nbsp;|&nbsp; 👥 ${b.passengers} คน`:''}
-      ${(b.selfDrive===true||b.selfDrive==='true')?'&nbsp;|&nbsp; <strong style="color:#e65100">🚗 ผู้จองขับเอง</strong>':''}
+      ${(b.selfDrive===true||String(b.selfDrive).toLowerCase()==='true')?'&nbsp;|&nbsp; <strong style="color:#e65100">🚗 ผู้จองขับเอง</strong>':''}
     </div>
 
     <div class="form-group">
@@ -3332,9 +3332,9 @@ async function openAssignDriver(id) {
       <div id="assignVehicleMsg" style="margin-top:6px;font-size:13px"></div>
     </div>
 
-    ${(b.selfDrive===true||b.selfDrive==='true') ? `<div class="alert" style="background:#fff3e0;border-color:#ffb74d;color:#e65100">🚗 การจองนี้ผู้จองขับเอง — ไม่จำเป็นต้องกำหนดคนขับ</div>` : (!hasDrivers ? `<div class="alert alert-warning">⚠️ ยังไม่มีคนขับในระบบ กรุณาไปที่หน้า <strong>👥 จัดการผู้ใช้</strong> แล้วเพิ่มผู้ใช้ role <strong>คนขับรถ</strong> ก่อน</div>` : '')}
+    ${(b.selfDrive===true||String(b.selfDrive).toLowerCase()==='true') ? `<div class="alert" style="background:#fff3e0;border-color:#ffb74d;color:#e65100">🚗 การจองนี้ผู้จองขับเอง — ไม่จำเป็นต้องกำหนดคนขับ</div>` : (!hasDrivers ? `<div class="alert alert-warning">⚠️ ยังไม่มีคนขับในระบบ กรุณาไปที่หน้า <strong>👥 จัดการผู้ใช้</strong> แล้วเพิ่มผู้ใช้ role <strong>คนขับรถ</strong> ก่อน</div>` : '')}
 
-    ${hasDrivers && !(b.selfDrive===true||b.selfDrive==='true') ? `
+    ${hasDrivers && !(b.selfDrive===true||String(b.selfDrive).toLowerCase()==='true') ? `
     <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
       <span style="background:#d1e7dd;color:#0a5c36;padding:5px 12px;border-radius:20px;font-size:13px;font-weight:700">✅ ว่าง ${freeDrivers.length} คน</span>
       ${busyDrivers.length>0?`<span style="background:#f8d7da;color:#842029;padding:5px 12px;border-radius:20px;font-size:13px;font-weight:700">🔴 ติดงาน ${busyDrivers.length} คน</span>`:''}
@@ -3356,7 +3356,7 @@ async function openAssignDriver(id) {
     </div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeModal()">ยกเลิก</button>
-      <button class="btn btn-success" onclick="confirmAssign('${b.id}')" ${(b.selfDrive===true||b.selfDrive==='true')||freeDrivers.length>0?'':'disabled'}>✅ ยืนยัน</button>
+      <button class="btn btn-success" onclick="confirmAssign('${b.id}')" ${(b.selfDrive===true||String(b.selfDrive).toLowerCase()==='true')||freeDrivers.length>0?'':'disabled'}>✅ ยืนยัน</button>
     </div>`);
 }
 
@@ -3387,7 +3387,7 @@ async function confirmAssign(id) {
   const driverId=driverSel?driverSel.value:'';
   const mile=document.getElementById('assignMile').value;
   const b=bookings.find(x=>String(x.id)===String(id));
-  const isSelfDrive=b&&(b.selfDrive===true||b.selfDrive==='true');
+  const isSelfDrive=b&&(b.selfDrive===true||String(b.selfDrive).toLowerCase()==='true');
   if(!vehicleId){alert('กรุณาเลือกรถ');return;}
   if(!isSelfDrive&&!driverId){alert('กรุณาเลือกคนขับ');return;}
   const v=vehicles.find(x=>x.id===vehicleId);
