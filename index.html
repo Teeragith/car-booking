@@ -1510,7 +1510,7 @@ function formatDate(d) {
 }
 
 function isOverdue(b) {
-  if (b.status !== 'pending') return false;
+  if (String(b.status||'').toLowerCase() !== 'pending') return false;
   const today = new Date().toISOString().slice(0,10);
   const useDate = String(b.useDate||'').slice(0,10);
   return useDate < today && useDate !== '';
@@ -1534,11 +1534,11 @@ function roleIcon(r){ return {admin:'👑',driver:'🚘',booker:'👤'}[r]||'�
 // ADMIN: DASHBOARD
 // ============================================================
 function renderAdminDashboard() {
-  const total=bookings.length,pending=bookings.filter(b=>b.status==='pending').length,inUse=bookings.filter(b=>b.status==='in-use').length,done=bookings.filter(b=>b.status==='done').length;
+  const st=b=>String(b.status||'').toLowerCase();const total=bookings.length,pending=bookings.filter(b=>st(b)==='pending').length,inUse=bookings.filter(b=>st(b)==='in-use').length,done=bookings.filter(b=>st(b)==='done').length;
   const overdue=bookings.filter(b=>isOverdue(b)).length;
   const recent=[...bookings].sort((a,b)=>String(b.id).localeCompare(String(a.id))).slice(0,5);
   document.getElementById('mainContent').innerHTML=`
-    <div class="section-title">📊 Dashboard</div>
+    <div class="section-title" style="display:flex;align-items:center;justify-content:space-between">📊 Dashboard<button onclick="renderPage('dashboard')" style="font-size:13px;padding:6px 14px;border:1px solid #ccc;border-radius:8px;background:#fff;cursor:pointer">🔄 รีเฟรช</button></div>
     ${overdue>0?`<div class="alert alert-danger" style="margin-bottom:12px;font-weight:700">🔴 มีการจองค้างดำเนินการเลยกำหนด <strong>${overdue} รายการ</strong> — กรุณาตรวจสอบด้านล่าง</div>`:''}
     <div class="stats-grid">
       <div class="stat-card s1"><div class="stat-num">${total}</div><div class="stat-label">การจองทั้งหมด</div></div>
@@ -1582,7 +1582,7 @@ function renderAdminDashboard() {
 
     <div class="card">
       <div class="card-header"><div class="card-title">⏳ รอกำหนดคนขับ</div></div>
-      ${bookings.filter(b=>b.status==='pending').sort((a,b2)=>isOverdue(b2)-isOverdue(b)?isOverdue(b2)-isOverdue(b):0).map(b=>`
+      ${bookings.filter(b=>String(b.status||'').toLowerCase()==='pending').sort((a,b2)=>isOverdue(b2)-isOverdue(b)?isOverdue(b2)-isOverdue(b):0).map(b=>`
         <div class="booking-card status-pending${isOverdue(b)?' overdue':''}">
           <div class="bc-header">
             <div><div class="bc-title">📋 ${b.id} — ${b.bookerName}</div>
