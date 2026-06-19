@@ -136,7 +136,7 @@ function testTelegramBot(p) {
     var resp = UrlFetchApp.fetch('https://api.telegram.org/bot' + botToken + '/sendMessage', {
       method: 'post',
       contentType: 'application/json',
-      payload: JSON.stringify({ chat_id: chatId, text: '\U0001f514 ทดสอบระบบแจ้งเตือนจากระบบจองรถ \u2705' }),
+      payload: JSON.stringify({ chat_id: chatId, text: '🔔 ทดสอบระบบแจ้งเตือนจากระบบจองรถ ✅' }),
       muteHttpExceptions: true
     });
     var code = resp.getResponseCode();
@@ -151,46 +151,46 @@ function testTelegramBot(p) {
 // ── Message builders ──────────────────────────────────────
 
 function _msgNewBooking(booking) {
-  return '\U0001f514 มีการจองรถใหม่' +
-    '\n\U0001f4cb รหัส: ' + booking.id +
-    '\n\U0001f464 ' + booking.bookerName + ' (' + booking.dept + ')' +
-    '\n\U0001f4c5 ' + booking.useDate + '  \U0001f550 ' + booking.timeSlot +
-    '\n\U0001f4cd ' + booking.destination +
-    (booking.selfDrive === 'true' || booking.selfDrive === true ? '\n\U0001f697 ผู้จองขับเอง' : '') +
-    '\n\U0001f465 ' + (booking.passengers || 1) + ' คน';
+  return '🔔 มีการจองรถใหม่' +
+    '\n📋 รหัส: ' + booking.id +
+    '\n👤 ' + booking.bookerName + ' (' + booking.dept + ')' +
+    '\n📅 ' + booking.useDate + '  🕐 ' + booking.timeSlot +
+    '\n📍 ' + booking.destination +
+    (booking.selfDrive === 'true' || booking.selfDrive === true ? '\n🚗 ผู้จองขับเอง' : '') +
+    '\n👥 ' + (booking.passengers || 1) + ' คน';
 }
 
 function _msgApproved(booking, plate, driverName) {
-  return '\u2705 การจองได้รับการอนุมัติ' +
-    '\n\U0001f4cb รหัส: ' + booking.id +
-    '\n\U0001f4c5 ' + booking.useDate + '  \U0001f550 ' + booking.timeSlot +
-    '\n\U0001f4cd ' + booking.destination +
-    '\n\U0001f697 รถ: ' + plate +
-    '\n\U0001f468\u200d\u2708\ufe0f คนขับ: ' + driverName;
+  return '✅ การจองได้รับการอนุมัติ' +
+    '\n📋 รหัส: ' + booking.id +
+    '\n📅 ' + booking.useDate + '  🕐 ' + booking.timeSlot +
+    '\n📍 ' + booking.destination +
+    '\n🚗 รถ: ' + plate +
+    '\n👨‍✈️ คนขับ: ' + driverName;
 }
 
 function _msgDriverAssigned(booking, plate) {
-  return '\U0001f698 คุณได้รับมอบหมายงานใหม่' +
-    '\n\U0001f4cb รหัส: ' + booking.id +
-    '\n\U0001f464 ผู้โดยสาร: ' + booking.bookerName + ' (' + booking.dept + ')' +
-    '\n\U0001f4c5 ' + booking.useDate + '  \U0001f550 ' + booking.timeSlot +
-    '\n\U0001f4cd ' + booking.destination +
-    '\n\U0001f697 รถ: ' + plate;
+  return '🚘 คุณได้รับมอบหมายงานใหม่' +
+    '\n📋 รหัส: ' + booking.id +
+    '\n👤 ผู้โดยสาร: ' + booking.bookerName + ' (' + booking.dept + ')' +
+    '\n📅 ' + booking.useDate + '  🕐 ' + booking.timeSlot +
+    '\n📍 ' + booking.destination +
+    '\n🚗 รถ: ' + plate;
 }
 
 function _msgCancelledBooker(booking) {
-  return '\u274c การจองของคุณถูกยกเลิก' +
-    '\n\U0001f4cb รหัส: ' + booking.id +
-    '\n\U0001f4c5 ' + booking.useDate + '  \U0001f550 ' + booking.timeSlot +
-    '\n\U0001f4cd ' + booking.destination +
+  return '❌ การจองของคุณถูกยกเลิก' +
+    '\n📋 รหัส: ' + booking.id +
+    '\n📅 ' + booking.useDate + '  🕐 ' + booking.timeSlot +
+    '\n📍 ' + booking.destination +
     '\nกรุณาติดต่อผู้ดูแลระบบเพื่อขอข้อมูลเพิ่มเติม';
 }
 
 function _msgCancelledDriver(booking) {
-  return '\u274c งานของคุณถูกยกเลิก' +
-    '\n\U0001f4cb รหัส: ' + booking.id +
-    '\n\U0001f4c5 ' + booking.useDate + '  \U0001f550 ' + booking.timeSlot +
-    '\n\U0001f4cd ' + booking.destination;
+  return '❌ งานของคุณถูกยกเลิก' +
+    '\n📋 รหัส: ' + booking.id +
+    '\n📅 ' + booking.useDate + '  🕐 ' + booking.timeSlot +
+    '\n📍 ' + booking.destination;
 }
 
 // =========================================================
