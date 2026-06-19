@@ -136,7 +136,7 @@ function testTelegramBot(p) {
     var resp = UrlFetchApp.fetch('https://api.telegram.org/bot' + botToken + '/sendMessage', {
       method: 'post',
       contentType: 'application/json',
-      payload: JSON.stringify({ chat_id: chatId, text: '🔔 ทดสอบระบบแจ้งเตือนจากระบบจองรถ ✅' }),
+      payload: JSON.stringify({ chat_id: chatId, text: '[แจ้งเตือน] ทดสอบระบบแจ้งเตือนจากระบบจองรถ ✅' }),
       muteHttpExceptions: true
     });
     var code = resp.getResponseCode();
@@ -151,46 +151,46 @@ function testTelegramBot(p) {
 // ── Message builders ──────────────────────────────────────
 
 function _msgNewBooking(booking) {
-  return '🔔 มีการจองรถใหม่' +
-    '\n📋 รหัส: ' + booking.id +
-    '\n👤 ' + booking.bookerName + ' (' + booking.dept + ')' +
-    '\n📅 ' + booking.useDate + '  🕐 ' + booking.timeSlot +
-    '\n📍 ' + booking.destination +
-    (booking.selfDrive === 'true' || booking.selfDrive === true ? '\n🚗 ผู้จองขับเอง' : '') +
-    '\n👥 ' + (booking.passengers || 1) + ' คน';
+  return '*** แจ้งเตือน: มีการจองรถใหม่ ***' +
+    '\nรหัส: ' + booking.id +
+    '\nผู้จอง: ' + booking.bookerName + ' (' + booking.dept + ')' +
+    '\nวันที่: ' + booking.useDate + '  เวลา: ' + booking.timeSlot +
+    '\nปลายทาง: ' + booking.destination +
+    (booking.selfDrive === 'true' || booking.selfDrive === true ? '\nหมายเหตุ: ผู้จองขับเอง' : '') +
+    '\nผู้โดยสาร: ' + (booking.passengers || 1) + ' คน';
 }
 
 function _msgApproved(booking, plate, driverName) {
-  return '✅ การจองได้รับการอนุมัติ' +
-    '\n📋 รหัส: ' + booking.id +
-    '\n📅 ' + booking.useDate + '  🕐 ' + booking.timeSlot +
-    '\n📍 ' + booking.destination +
-    '\n🚗 รถ: ' + plate +
-    '\n👨‍✈️ คนขับ: ' + driverName;
+  return '*** อนุมัติแล้ว: การจองของคุณได้รับการอนุมัติ ***' +
+    '\nรหัส: ' + booking.id +
+    '\nวันที่: ' + booking.useDate + '  เวลา: ' + booking.timeSlot +
+    '\nปลายทาง: ' + booking.destination +
+    '\nรถ: ' + plate +
+    '\nคนขับ: ' + driverName;
 }
 
 function _msgDriverAssigned(booking, plate) {
-  return '🚘 คุณได้รับมอบหมายงานใหม่' +
-    '\n📋 รหัส: ' + booking.id +
-    '\n👤 ผู้โดยสาร: ' + booking.bookerName + ' (' + booking.dept + ')' +
-    '\n📅 ' + booking.useDate + '  🕐 ' + booking.timeSlot +
-    '\n📍 ' + booking.destination +
-    '\n🚗 รถ: ' + plate;
+  return '*** งานใหม่: คุณได้รับมอบหมายงาน ***' +
+    '\nรหัส: ' + booking.id +
+    '\nผู้โดยสาร: ' + booking.bookerName + ' (' + booking.dept + ')' +
+    '\nวันที่: ' + booking.useDate + '  เวลา: ' + booking.timeSlot +
+    '\nปลายทาง: ' + booking.destination +
+    '\nรถ: ' + plate;
 }
 
 function _msgCancelledBooker(booking) {
-  return '❌ การจองของคุณถูกยกเลิก' +
-    '\n📋 รหัส: ' + booking.id +
-    '\n📅 ' + booking.useDate + '  🕐 ' + booking.timeSlot +
-    '\n📍 ' + booking.destination +
+  return '*** แจ้งเตือน: การจองของคุณถูกยกเลิก ***' +
+    '\nรหัส: ' + booking.id +
+    '\nวันที่: ' + booking.useDate + '  เวลา: ' + booking.timeSlot +
+    '\nปลายทาง: ' + booking.destination +
     '\nกรุณาติดต่อผู้ดูแลระบบเพื่อขอข้อมูลเพิ่มเติม';
 }
 
 function _msgCancelledDriver(booking) {
-  return '❌ งานของคุณถูกยกเลิก' +
-    '\n📋 รหัส: ' + booking.id +
-    '\n📅 ' + booking.useDate + '  🕐 ' + booking.timeSlot +
-    '\n📍 ' + booking.destination;
+  return '*** แจ้งเตือน: งานของคุณถูกยกเลิก ***' +
+    '\nรหัส: ' + booking.id +
+    '\nวันที่: ' + booking.useDate + '  เวลา: ' + booking.timeSlot +
+    '\nปลายทาง: ' + booking.destination;
 }
 
 // =========================================================
@@ -306,7 +306,7 @@ function sendBookingConfirmEmail(toEmail, toName, booking, assignData) {
   var plate = assignData.plate || booking.plate || '-';
   var brand = assignData.vehicleBrand || booking.vehicleBrand || '-';
   var driverName = assignData.selfDrive ? 'ผู้จองขับเอง' : (assignData.driverName || '-');
-  var subject = '[ระบบจองรถ] ✅ อนุมัติการจอง ' + booking.id;
+  var subject = '[ระบบจองรถ] [อนุมัติ] อนุมัติการจอง ' + booking.id;
   var body =
     'เรียน คุณ' + toName + '\n\n' +
     'การจองรถของท่านได้รับการอนุมัติเรียบร้อยแล้ว\n\n' +
@@ -326,7 +326,7 @@ function sendBookingConfirmEmail(toEmail, toName, booking, assignData) {
 function sendDriverAssignEmail(toEmail, toName, booking, assignData) {
   var plate = assignData.plate || '-';
   var brand = assignData.vehicleBrand || '-';
-  var subject = '[ระบบจองรถ] 🚘 มีงานใหม่ — ' + booking.useDate;
+  var subject = '[ระบบจองรถ] [งานใหม่] มีงานใหม่ — ' + booking.useDate;
   var body =
     'เรียน คุณ' + toName + '\n\n' +
     'ท่านได้รับมอบหมายงานขับรถ\n\n' +
@@ -362,7 +362,7 @@ function sendDriverUpdateEmail(toEmail, toName, booking, updaterName) {
 }
 
 function sendCancelEmail(toEmail, toName, booking) {
-  var subject = '[ระบบจองรถ] ❌ การจองถูกยกเลิก — ' + booking.id;
+  var subject = '[ระบบจองรถ] [ยกเลิก] การจองถูกยกเลิก — ' + booking.id;
   var body =
     'เรียน คุณ' + toName + '\n\n' +
     'การจองรถของท่านได้ถูกยกเลิกแล้ว\n\n' +
@@ -378,7 +378,7 @@ function sendCancelEmail(toEmail, toName, booking) {
 }
 
 function sendDriverCancelEmail(toEmail, toName, booking) {
-  var subject = '[ระบบจองรถ] ❌ งานถูกยกเลิก — ' + booking.id;
+  var subject = '[ระบบจองรถ] [ยกเลิก] งานถูกยกเลิก — ' + booking.id;
   var body =
     'เรียน คุณ' + toName + '\n\n' +
     'งานที่ท่านได้รับมอบหมายได้ถูกยกเลิกแล้ว\n\n' +
