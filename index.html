@@ -938,7 +938,7 @@ function deleteMaintenance(d) {
 // ============================================================
 // STATE
 // ============================================================
-let SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby3EeIXCOH9Gtkt1fJAIKqmYaRHR7zrR04wvzcVEawNUrYx4fv2tWcswf2A-nOoyK9v/exec;
+let SCRIPT_URL = localStorage.getItem('carbook_script_url') || 'https://script.google.com/macros/s/AKfycbz5CpNmv7c8Z93FAd_Z226JCJWTaE3-c4afo2YEGUI5Qxc90COKPXX-1NNYo32nF-lqig/exec';
 let IS_DEMO = false;
 let currentUser = null, currentTab = null;
 let vehicles = [], drivers = {}, users = [];
