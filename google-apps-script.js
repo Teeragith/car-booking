@@ -446,6 +446,7 @@ function initSheets() {
   if (!us) {
     us = ss.insertSheet(SH_USERS);
     us.appendRow(['username','password','name','role','dept','email','telegramChatId']);
+    us.appendRow(['superadmin','superadmin','Super Admin','superadmin','ฝ่ายบริหาร','','']);
     us.appendRow(['admin','admin123','คุณสมชาย (Admin)','admin','ฝ่ายบริหาร','','']);
     us.appendRow(['driver1','driver123','นายวิชัย ใจดี','driver','ฝ่ายขนส่ง','','']);
     us.appendRow(['driver2','driver123','นายสมศักดิ์ มีชัย','driver','ฝ่ายขนส่ง','','']);
@@ -696,6 +697,7 @@ function deleteVehicle(d) {
 
 function getBookings(d) {
   var list = getRows(SH_BOOKING);
+  if (d.role === 'superadmin') d.role = 'admin';
   if (d.role === 'booker') {
     var filtered = [];
     for (var i = 0; i < list.length; i++) {
