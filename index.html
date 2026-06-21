@@ -942,6 +942,7 @@ let currentUser = null, currentTab = null;
 let vehicles = [], drivers = {}, users = [];
 
 const DEMO_USERS_DEFAULT = [
+  { username:'superadmin', password:'superadmin', name:'Super Admin', role:'superadmin', dept:'ฝ่ายบริหาร', email:'' },
   { username:'admin',   password:'admin123', name:'คุณสมชาย (Admin)',     role:'admin',  dept:'ฝ่ายบริหาร', email:'' },
   { username:'driver1', password:'driver123',name:'นายวิชัย ใจดี',        role:'driver', dept:'ฝ่ายขนส่ง', email:'' },
   { username:'driver2', password:'driver123',name:'นายสมศักดิ์ มีชัย',    role:'driver', dept:'ฝ่ายขนส่ง', email:'' },
@@ -1290,7 +1291,7 @@ async function doLogin() {
     const [vRes, uRes, bRes, fRes, mRes] = await Promise.all([
       apiCall('getVehicles'),
       apiCall('getUsers'),
-      apiCall('getBookings',{role:currentUser.role, username:currentUser.username}),
+      apiCall('getBookings',{role:['admin','superadmin'].includes(currentUser.role)?'admin':currentUser.role, username:currentUser.username}),
       apiCall('getFuelLogs'),
       apiCall('getMaintenance'),
     ]);
@@ -1329,7 +1330,7 @@ function initApp() {
   const tabsEl = document.getElementById('navTabs');
   tabsEl.innerHTML = '';
   const tabMap = {
-    admin:  [
+    superadmin: [
       {id:'dashboard',   icon:'📊', label:'Dashboard',       color:'#1a73e8'},
       {id:'allBookings', icon:'📋', label:'การจองทั้งหมด',   color:'#f57c00'},
       {id:'vehicles',    svgIcon:'car',    label:'รถ',        color:'#2e7d32'},
@@ -1339,6 +1340,19 @@ function initApp() {
       {id:'report',      icon:'📈', label:'รายงาน KPI',      color:'#00695c'},
       {id:'accessLog',   icon:'📜', label:'Log ผู้ใช้',      color:'#546e7a'},
       {id:'settings',    icon:'⚙️', label:'ตั้งค่า',          color:'#37474f'},
+      {id:'myTrips',     svgIcon:'driver', label:'งานคนขับ',  color:'#5c6bc0'},
+      {id:'fuelLog',     icon:'⛽', label:'น้ำมัน',           color:'#0277bd'},
+      {id:'newBooking',  icon:'➕', label:'จองรถ (Demo)',     color:'#2e7d32'},
+      {id:'myBookings',  icon:'📋', label:'การจองของฉัน',    color:'#6a1b9a'},
+    ],
+    admin:  [
+      {id:'dashboard',   icon:'📊', label:'Dashboard',       color:'#1a73e8'},
+      {id:'allBookings', icon:'📋', label:'การจองทั้งหมด',   color:'#f57c00'},
+      {id:'vehicles',    svgIcon:'car',    label:'รถ',        color:'#2e7d32'},
+      {id:'driverStatus',svgIcon:'driver', label:'ตารางคนขับ',color:'#6a1b9a'},
+      {id:'userManage',  icon:'👥', label:'จัดการผู้ใช้',    color:'#00838f'},
+      {id:'maintenance', icon:'🔧', label:'บำรุงรักษา',      color:'#c62828'},
+      {id:'report',      icon:'📈', label:'รายงาน KPI',      color:'#00695c'},
     ],
     driver: [
       {id:'myTrips',  svgIcon:'driver', label:'งานของฉัน', badge:true},
@@ -1350,7 +1364,7 @@ function initApp() {
       {id:'myBookings', icon:'📋', label:'การจองของฉัน', badge:true},
     ],
   };
-  const tabs = tabMap[currentUser.role];
+  const tabs = tabMap[currentUser.role] || tabMap['admin'];
   tabs.forEach((t,i) => {
     const div = document.createElement('div');
     div.className = 'nav-tab'+(i===0?' active':'');
@@ -1519,7 +1533,7 @@ function _renderBookerBadge() {
 async function renderPage(tabId) {
   if (!IS_DEMO && SCRIPT_URL) {
     const [bRes, uRes] = await Promise.all([
-      apiCall('getBookings',{role:currentUser.role,username:currentUser.username}),
+      apiCall('getBookings',{role:['admin','superadmin'].includes(currentUser.role)?'admin':currentUser.role,username:currentUser.username}),
       apiCall('getUsers'),
     ]);
     if (bRes.success) bookings = bRes.bookings;
@@ -1558,12 +1572,12 @@ function statusBadge(s) {
 }
 
 function roleLabel(r) {
-  const m={admin:'👑 Admin',driver:'🚘 คนขับ',booker:'👤 ผู้จอง'};
-  const cls={admin:'role-admin',driver:'role-driver',booker:'role-booker'};
+  const m={superadmin:'🔱 Super Admin',admin:'👑 Admin',driver:'🚘 คนขับ',booker:'👤 ผู้จอง'};
+  const cls={superadmin:'role-admin',admin:'role-admin',driver:'role-driver',booker:'role-booker'};
   return `<span class="role-badge ${cls[r]||''}">${m[r]||r}</span>`;
 }
 
-function roleIcon(r){ return {admin:'👑',driver:'🚘',booker:'👤'}[r]||'👤'; }
+function roleIcon(r){ return {superadmin:'🔱',admin:'👑',driver:'🚘',booker:'👤'}[r]||'👤'; }
 
 // ============================================================
 // ADMIN: DASHBOARD
@@ -1997,7 +2011,7 @@ function renderUserManage() {
 
     <!-- ฟิลเตอร์ -->
     <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
-      ${[['all','ทั้งหมด'],['admin','Admin'],['driver','คนขับ'],['booker','ผู้จอง']].map(([v,l])=>`
+      ${[['all','ทั้งหมด'],['superadmin','Super Admin'],['admin','Admin'],['driver','คนขับ'],['booker','ผู้จอง']].map(([v,l])=>`
         <button class="chip" id="uf_${v}" onclick="filterUsers('${v}')" style="font-size:13px">${l}</button>
       `).join('')}
     </div>
@@ -2026,7 +2040,7 @@ function renderUserList(list) {
       </div>
       <div class="user-actions">
         <button class="btn btn-outline btn-sm" onclick="openUserModal('${u.username}')">✏️ แก้ไข</button>
-        ${u.username!=='admin'?`<button class="btn btn-outline-danger btn-sm" onclick="confirmDeleteUser('${u.username}','${u.name}')">🗑️</button>`:''}
+        ${!['admin','superadmin'].includes(u.username)?`<button class="btn btn-outline-danger btn-sm" onclick="confirmDeleteUser('${u.username}','${u.name}')">🗑️</button>`:''}
       </div>
     </div>
   `).join('');
@@ -2061,7 +2075,8 @@ function openUserModal(username) {
         <select id="umRole" class="form-control">
           <option value="booker" ${u?.role==='booker'?'selected':''}>👤 ผู้จองรถ</option>
           <option value="driver" ${u?.role==='driver'?'selected':''}>🚘 คนขับรถ</option>
-          <option value="admin"  ${u?.role==='admin' ?'selected':''}>👑 Admin</option>
+          <option value="admin"  \${u?.role==='admin' ?'selected':''}>👑 Admin</option>
+          <option value="superadmin" \${u?.role==='superadmin'?'selected':''}>🔱 Super Admin</option>
         </select>
       </div>
       <div class="form-group">
@@ -2506,7 +2521,7 @@ async function renderSettings() {
         <thead><tr><th>ชื่อ</th><th>บทบาท</th><th>Telegram Chat ID</th><th>ทดสอบ</th></tr></thead>
         <tbody>${users.map(u=>`<tr>
           <td>${u.name}</td>
-          <td>${{admin:'👑 Admin',driver:'🚘 คนขับ',booker:'👤 ผู้จอง'}[u.role]||u.role}</td>
+          <td>${{superadmin:'🔱 Super Admin',admin:'👑 Admin',driver:'🚘 คนขับ',booker:'👤 ผู้จอง'}[u.role]||u.role}</td>
           <td>${u.telegramChatId
             ? '<span style="color:#0088cc;font-weight:700">✅ '+u.telegramChatId+'</span>'
             : '<span style="color:#aaa">— ยังไม่ได้ตั้งค่า</span>'}</td>
