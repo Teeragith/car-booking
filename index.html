@@ -1331,19 +1331,17 @@ function initApp() {
   tabsEl.innerHTML = '';
   const tabMap = {
     superadmin: [
-      {id:'dashboard',   icon:'📊', label:'Dashboard',       color:'#1a73e8'},
-      {id:'allBookings', icon:'📋', label:'การจองทั้งหมด',   color:'#f57c00'},
-      {id:'vehicles',    svgIcon:'car',    label:'รถ',        color:'#2e7d32'},
-      {id:'driverStatus',svgIcon:'driver', label:'ตารางคนขับ',color:'#6a1b9a'},
-      {id:'userManage',  icon:'👥', label:'จัดการผู้ใช้',    color:'#00838f'},
-      {id:'maintenance', icon:'🔧', label:'บำรุงรักษา',      color:'#c62828'},
-      {id:'report',      icon:'📈', label:'รายงาน KPI',      color:'#00695c'},
-      {id:'accessLog',   icon:'📜', label:'Log ผู้ใช้',      color:'#546e7a'},
-      {id:'settings',    icon:'⚙️', label:'ตั้งค่า',          color:'#37474f'},
-      {id:'myTrips',     svgIcon:'driver', label:'งานคนขับ',  color:'#5c6bc0'},
-      {id:'fuelLog',     icon:'⛽', label:'น้ำมัน',           color:'#0277bd'},
-      {id:'newBooking',  icon:'➕', label:'จองรถ (Demo)',     color:'#2e7d32'},
-      {id:'myBookings',  icon:'📋', label:'การจองของฉัน',    color:'#6a1b9a'},
+      {id:'dashboard',      icon:'📊', label:'Dashboard',       color:'#1a73e8'},
+      {id:'allBookings',    icon:'📋', label:'การจองทั้งหมด',   color:'#f57c00'},
+      {id:'vehicles',       svgIcon:'car',    label:'รถ',        color:'#2e7d32'},
+      {id:'driverStatus',   svgIcon:'driver', label:'ตารางคนขับ',color:'#6a1b9a'},
+      {id:'userManage',     icon:'👥', label:'จัดการผู้ใช้',    color:'#00838f'},
+      {id:'maintenance',    icon:'🔧', label:'บำรุงรักษา',      color:'#c62828'},
+      {id:'report',         icon:'📈', label:'รายงาน KPI',      color:'#00695c'},
+      {id:'accessLog',      icon:'📜', label:'Log ผู้ใช้',      color:'#546e7a'},
+      {id:'settings',       icon:'⚙️', label:'ตั้งค่า',          color:'#37474f'},
+      {id:'superUserView',  icon:'👤', label:'มุมมอง User',     color:'#00897b'},
+      {id:'superDriverView',svgIcon:'driver', label:'มุมมอง Driver', color:'#5c6bc0'},
     ],
     admin:  [
       {id:'dashboard',   icon:'📊', label:'Dashboard',       color:'#1a73e8'},
@@ -1401,6 +1399,9 @@ function switchTab(tabId, el) {
 
 
 // ── Date Filter Helpers ─────────────────────────────────
+let _superViewUser = null;
+let _superViewDriver = null;
+let _superViewDriverTab = 'trips';
 let _periodAllBookings = 'all';
 let _periodReport      = 'month';
 let _reportRangeFrom   = '';   // YYYY-MM
@@ -1539,7 +1540,7 @@ async function renderPage(tabId) {
     if (bRes.success) bookings = bRes.bookings;
     if (uRes.success) { users=uRes.users; drivers={}; users.filter(u=>u.role==='driver').forEach(u=>{drivers[u.username]=u.name;}); }
   }
-  const pages = { dashboard:renderAdminDashboard, allBookings:renderAllBookings, vehicles:renderVehicles, driverStatus:renderDriverStatus, userManage:renderUserManage, maintenance:renderMaintenance, report:renderReport, accessLog:renderAccessLog, settings:renderSettings, myTrips:renderMyTrips, fuelLog:renderFuelLog, tripLog:renderTripLog, newBooking:renderNewBooking, myBookings:renderMyBookings };
+  const pages = { dashboard:renderAdminDashboard, allBookings:renderAllBookings, vehicles:renderVehicles, driverStatus:renderDriverStatus, userManage:renderUserManage, maintenance:renderMaintenance, report:renderReport, accessLog:renderAccessLog, settings:renderSettings, myTrips:renderMyTrips, fuelLog:renderFuelLog, tripLog:renderTripLog, newBooking:renderNewBooking, myBookings:renderMyBookings, superUserView:renderSuperUserView, superDriverView:renderSuperDriverView };
   const fn = pages[tabId];
   if(fn) fn();
 }
@@ -3259,6 +3260,111 @@ async function submitBooking() {
 // ============================================================
 // BOOKER: MY BOOKINGS
 // ============================================================
+
+// ============================================================
+// SUPER ADMIN: View as User / Driver
+// ============================================================
+function renderSuperUserView() {
+  const bookers = users.filter(u => u.role === 'booker');
+  if (!_superViewUser || !bookers.find(u => u.username === _superViewUser)) {
+    _superViewUser = bookers[0]?.username || null;
+  }
+  const mc = document.getElementById('mainContent');
+  if (!_superViewUser) {
+    mc.innerHTML = '<div class="empty"><div class="icon">👤</div><p>ยังไม่มีผู้จองในระบบ</p></div>'; return;
+  }
+  const selectedUser = bookers.find(u => u.username === _superViewUser);
+  const myList = bookings.filter(b => b.bookerId === _superViewUser);
+  mc.innerHTML = `
+    <div style="background:#e8f5e9;border-radius:14px;padding:14px 18px;margin-bottom:18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+      <div style="font-size:13px;font-weight:700;color:#2e7d32;white-space:nowrap">👤 มุมมอง User</div>
+      <select class="form-control" style="width:auto;min-width:220px;font-size:14px" onchange="selectSuperUser(this.value)">
+        ${bookers.map(u=>`<option value="${u.username}" ${_superViewUser===u.username?'selected':''}>${u.name}${u.dept?' ('+u.dept+')':''}</option>`).join('')}
+      </select>
+      <span style="font-size:12px;color:#555">${myList.length} รายการจอง</span>
+    </div>
+    ${myList.length===0?'<div class="empty"><div class="icon">📭</div><p>ไม่มีรายการจอง</p></div>':''}
+    ${myList.map(b=>`
+      <div class="booking-card status-${b.status}">
+        <div class="bc-header">
+          <div>
+            <div class="bc-title">${b.id}${b.plate?' — '+b.plate+' ('+(b.vehicleBrand||'')+')':' — 🕐 รอกำหนดรถ'}</div>
+            <div class="bc-meta"><span>📅 ${formatDate(b.useDate)}</span><span>🕐 ${b.timeSlot}</span><span>📍 ${b.destination}</span>${b.passengers?`<span>👥 ${b.passengers} คน</span>`:''}</div>
+            ${b.driverName?`<div style="margin-top:8px;font-size:13px">🚘 คนขับ: <strong>${b.driverName}</strong></div>`:''}
+          </div>
+          ${statusBadge(b.status)}
+        </div>
+        <div style="margin-top:10px">
+          <button class="btn btn-outline btn-sm" onclick="viewBooking('${b.id}')">👁 รายละเอียด</button>
+        </div>
+      </div>
+    `).join('')}`;
+}
+function selectSuperUser(u) { _superViewUser=u; renderSuperUserView(); }
+
+function renderSuperDriverView() {
+  const driverList = users.filter(u => u.role === 'driver');
+  if (!_superViewDriver || !driverList.find(u => u.username === _superViewDriver)) {
+    _superViewDriver = driverList[0]?.username || null;
+  }
+  const mc = document.getElementById('mainContent');
+  if (!_superViewDriver) {
+    mc.innerHTML = '<div class="empty"><div class="icon">🚘</div><p>ยังไม่มีคนขับในระบบ</p></div>'; return;
+  }
+  const myBk = bookings.filter(b => b.driverId === _superViewDriver);
+  const active = myBk.filter(b => b.status !== 'done' && b.status !== 'cancelled');
+  const done   = myBk.filter(b => b.status === 'done');
+  const myFuel = fuelLogs.filter(f => f.driverId === _superViewDriver);
+  const tab = _superViewDriverTab;
+  mc.innerHTML = `
+    <div style="background:#ede7f6;border-radius:14px;padding:14px 18px;margin-bottom:18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+      <div style="font-size:13px;font-weight:700;color:#5c6bc0;white-space:nowrap">🚘 มุมมอง Driver</div>
+      <select class="form-control" style="width:auto;min-width:220px;font-size:14px" onchange="selectSuperDriver(this.value)">
+        ${driverList.map(u=>`<option value="${u.username}" ${_superViewDriver===u.username?'selected':''}>${u.name}</option>`).join('')}
+      </select>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:16px">
+      <button class="btn ${tab==='trips'?'btn-primary':'btn-outline'} btn-sm" onclick="_superDrvTab('trips')">งานของฉัน (${myBk.length})</button>
+      <button class="btn ${tab==='fuel'?'btn-primary':'btn-outline'} btn-sm" onclick="_superDrvTab('fuel')">น้ำมัน (${myFuel.length})</button>
+      <button class="btn ${tab==='history'?'btn-primary':'btn-outline'} btn-sm" onclick="_superDrvTab('history')">ประวัติ (${done.length})</button>
+    </div>
+    <div id="superDrvContent">
+      ${tab==='trips'? (active.length===0?'<div class="empty"><div class="icon">✅</div><p>ไม่มีงานค้าง</p></div>':active.map(b=>`
+        <div class="booking-card status-${b.status}">
+          <div class="bc-header">
+            <div>
+              <div class="bc-title">${b.id} — ${b.plate||'รอกำหนดรถ'}</div>
+              <div class="bc-meta"><span>📅 ${formatDate(b.useDate)}</span><span>🕐 ${b.timeSlot}</span><span>📍 ${b.destination}</span></div>
+              <div style="font-size:13px;margin-top:6px">👤 ${b.bookerName} (${b.dept||''})</div>
+            </div>
+            ${statusBadge(b.status)}
+          </div>
+          <button class="btn btn-outline btn-sm" style="margin-top:10px" onclick="viewBooking('${b.id}')">👁 รายละเอียด</button>
+        </div>
+      `).join('')) : ''}
+      ${tab==='fuel'? (myFuel.length===0?'<div class="empty"><div class="icon">⛽</div><p>ยังไม่มีรายการเติมน้ำมัน</p></div>':myFuel.map(f=>`
+        <div class="card" style="margin-bottom:12px;padding:14px 16px">
+          <div style="font-weight:700">${f.date} — ${f.plate||''} ${f.brand||''}</div>
+          <div style="font-size:13px;color:#555;margin-top:4px">${f.liters} ลิตร (${f.fuelType||''}) ราคา ${Number(f.totalCost||0).toLocaleString()} บาท</div>
+          ${f.note?`<div style="font-size:12px;color:#888;margin-top:2px">${f.note}</div>`:''}
+        </div>
+      `).join('')) : ''}
+      ${tab==='history'? (done.length===0?'<div class="empty"><div class="icon">📝</div><p>ยังไม่มีประวัติ</p></div>':done.map(b=>`
+        <div class="booking-card status-done">
+          <div class="bc-header">
+            <div>
+              <div class="bc-title">${b.id} — ${b.plate||''}</div>
+              <div class="bc-meta"><span>📅 ${formatDate(b.useDate)}</span><span>📍 ${b.destination}</span></div>
+            </div>
+            ${statusBadge(b.status)}
+          </div>
+        </div>
+      `).join('')) : ''}
+    </div>`;
+}
+function selectSuperDriver(u) { _superViewDriver=u; renderSuperDriverView(); }
+function _superDrvTab(t) { _superViewDriverTab=t; renderSuperDriverView(); }
+
 function renderMyBookings() {
   const myList=bookings.filter(b=>b.bookerId===currentUser.username);
   document.getElementById('mainContent').innerHTML=`
