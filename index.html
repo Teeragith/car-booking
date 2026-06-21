@@ -543,18 +543,7 @@
     </div>
     <button class="btn btn-primary" onclick="doLogin()">🔐 เข้าสู่ระบบ</button>
 
-    <div style="margin-top:14px;text-align:center">
-      <button class="btn btn-outline btn-sm" style="width:auto;font-size:12px" onclick="toggleUrlBox()">⚙️ ตั้งค่า Google Sheets</button>
-    </div>
-    <div id="urlBox" style="display:none;margin-top:12px;background:#f0f4ff;border-radius:12px;padding:14px 16px">
-      <div style="font-size:13px;font-weight:600;margin-bottom:8px;color:#1a1a1a">วาง Web App URL ที่ได้จาก Apps Script</div>
-      <input type="text" id="quickUrlInput" class="form-control" placeholder="https://script.google.com/macros/s/..." style="font-size:13px;margin-bottom:8px">
-      <div id="quickUrlError" style="display:none;color:#c62828;font-size:12px;margin-bottom:6px">⚠️ URL ไม่ถูกต้อง ต้องขึ้นต้นด้วย https://script.google.com</div>
-      <div style="display:flex;gap:8px">
-        <button class="btn btn-success" onclick="saveQuickUrl()" style="flex:1">🔗 บันทึก URL</button>
-        <button class="btn btn-outline" onclick="toggleUrlBox()" style="width:auto;padding:0 14px">ปิด</button>
-      </div>
-    </div>
+
   </div>
 </div>
 
@@ -1029,6 +1018,19 @@ function saveQuickUrl() {
   updateConnectionBadge();
   toast('✅ บันทึก URL เรียบร้อย!');
 }
+function saveScriptUrlFromSettings() {
+  const url = document.getElementById('settingsScriptUrl').value.trim();
+  const errEl = document.getElementById('scriptUrlError');
+  if (!url.startsWith('https://script.google.com')) {
+    if (errEl) errEl.style.display = 'block'; return;
+  }
+  if (errEl) errEl.style.display = 'none';
+  localStorage.setItem('carbook_script_url', url);
+  SCRIPT_URL = url;
+  updateConnectionBadge();
+  toast('✅ บันทึก URL เรียบร้อย!');
+}
+
 function showSetup() {
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('setupScreen').classList.add('show');
@@ -2514,6 +2516,22 @@ async function renderSettings() {
         </tr>`).join('')}</tbody>
       </table></div>
       <div style="padding:12px 16px;font-size:12px;color:#888">แก้ไข Chat ID ของแต่ละคนได้ที่ หน้า <strong>จัดการผู้ใช้</strong></div>
+    </div>
+
+    <!-- Apps Script URL -->
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-header">
+        <div class="card-title">🔗 Apps Script URL</div>
+      </div>
+      <div style="padding:16px;display:flex;flex-direction:column;gap:10px">
+        <div style="font-size:13px;color:#555">วาง URL ที่ได้หลัง Deploy Google Apps Script (Web App) — เฉพาะ Admin เท่านั้น</div>
+        <input type="text" id="settingsScriptUrl" class="form-control"
+          placeholder="https://script.google.com/macros/s/..."
+          style="font-family:monospace;font-size:13px"
+          value="${localStorage.getItem('carbook_script_url')||SCRIPT_URL}">
+        <div id="scriptUrlError" style="display:none;color:#c62828;font-size:12px">⚠️ URL ไม่ถูกต้อง ต้องขึ้นต้นด้วย https://script.google.com</div>
+        <button class="btn btn-outline" style="width:fit-content;border-color:#0a7c48;color:#0a7c48" onclick="saveScriptUrlFromSettings()">🔗 บันทึก URL ใหม่</button>
+      </div>
     </div>
 
     <div style="display:flex;justify-content:flex-end">
