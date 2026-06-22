@@ -3664,10 +3664,7 @@ function openTripLog(id) {
       <div class="form-group"><label>เลขไมล์เริ่มต้น (กม.)</label><input type="number" id="tMileStart" class="form-control" value="${b.mileStart||''}" placeholder="เช่น 45230"></div>
       <div class="form-group"><label>เลขไมล์สิ้นสุด (กม.)</label><input type="number" id="tMileEnd" class="form-control" value="${b.mileEnd||''}" placeholder="เช่น 45380"></div>
     </div>
-    <div class="form-row">
-      <div class="form-group"><label>สถานที่เริ่มต้น</label><input type="text" id="tStartLoc" class="form-control" value="${b.startLocation||''}" placeholder="เช่น สำนักงานใหญ่"></div>
-      <div class="form-group"><label>สถานที่สิ้นสุด</label><input type="text" id="tEndLoc" class="form-control" value="${b.endLocation||''}" placeholder="เช่น สนามบิน"></div>
-    </div>
+
     <div class="form-row">
       <div class="form-group"><label>เวลาเริ่มต้น</label><input type="time" id="tStartTime" class="form-control" value="${b.startTime||''}"></div>
       <div class="form-group"><label>เวลาสิ้นสุด</label><input type="time" id="tEndTime" class="form-control" value="${b.endTime||''}"></div>
@@ -3681,14 +3678,16 @@ function openTripLog(id) {
 }
 
 async function saveTripLog(id,finish) {
+  const b=bookings.find(x=>String(x.id)===String(id));
   const mileStart=document.getElementById('tMileStart').value;
   const mileEnd=document.getElementById('tMileEnd').value;
-  const startLoc=document.getElementById('tStartLoc').value;
-  const endLoc=document.getElementById('tEndLoc').value;
   const startTime=document.getElementById('tStartTime').value;
   const endTime=document.getElementById('tEndTime').value;
   const note=document.getElementById('tNote').value;
-  if(finish&&(!mileEnd||!endLoc||!endTime)){alert('กรุณากรอกเลขไมล์จบ, สถานที่สิ้นสุด และเวลาจบ');return;}
+  // ใช้ข้อมูลสถานที่จากใบจอง
+  const startLoc=b?.startLocation||'สำนักงานใหญ่';
+  const endLoc=b?.destination||'';
+  if(finish&&(!mileEnd||!endTime)){alert('กรุณากรอกเลขไมล์จบ และเวลาจบ');return;}
   const res=await apiCall('saveTripLog',{id,mileStart,mileEnd,startLocation:startLoc,endLocation:endLoc,startTime,endTime,note,finish});
   if(res.success){ closeModal(); toast(finish?'🏁 จบงานเรียบร้อย':'💾 บันทึกแล้ว'); renderPage(currentTab); }
 }
