@@ -3023,11 +3023,27 @@ function renderMyTrips() {
           ${statusBadge(b.status)}
         </div>
         <div class="trip-card-body">
-          <div class="info-row"><span class="label">ผู้จอง</span><span class="value">${b.bookerName}</span></div>
-          <div class="info-row"><span class="label">วันที่ใช้</span><span class="value">${formatDate(b.useDate)}</span></div>
-          <div class="info-row"><span class="label">ช่วงเวลา</span><span class="value">${b.timeSlot}</span></div>
-          <div class="info-row"><span class="label">ปลายทาง</span><span class="value">${b.destination}</span></div>
+          <div class="info-row"><span class="label">ผู้จอง</span><span class="value">${b.bookerName} (${b.dept||''})</span></div>
+          <div class="info-row"><span class="label">วันที่</span><span class="value">${formatDate(b.useDate)} &nbsp;|&nbsp; ${b.timeSlot}</span></div>
           <div class="info-row"><span class="label">วัตถุประสงค์</span><span class="value">${b.purpose}</span></div>
+          <!-- เส้นทาง -->
+          <div style="background:#f0f4ff;border-radius:12px;padding:12px 14px;margin:10px 0;display:flex;align-items:center;gap:0;flex-direction:column">
+            <div style="display:flex;align-items:center;gap:10px;width:100%">
+              <span style="font-size:18px">🟢</span>
+              <div>
+                <div style="font-size:11px;color:#888;font-weight:600">จุดเริ่มต้น</div>
+                <div style="font-weight:700;font-size:14px">${b.startLocation||'สำนักงานใหญ่'}</div>
+              </div>
+            </div>
+            <div style="width:2px;height:20px;background:#c5d0e6;margin:4px 0 4px 9px;align-self:flex-start"></div>
+            <div style="display:flex;align-items:center;gap:10px;width:100%">
+              <span style="font-size:18px">📍</span>
+              <div>
+                <div style="font-size:11px;color:#888;font-weight:600">ปลายทาง</div>
+                <div style="font-weight:700;font-size:14px;color:#c62828">${b.destination}</div>
+              </div>
+            </div>
+          </div>
           ${b.mileStart?`<div class="info-row"><span class="label">เลขไมล์เริ่ม</span><span class="value">${parseInt(b.mileStart).toLocaleString()} กม.</span></div>`:''}
           <div style="margin-top:12px">
             <button class="btn btn-primary btn-block" onclick="openTripLog('${b.id}')">
